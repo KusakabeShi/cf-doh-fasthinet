@@ -59,16 +59,24 @@ const handleRequest = async event => {
     const url = new URL(event.request.url);
     const name = url.searchParams.get("name");
     const type = url.searchParams.get("type");
-
-    if (type == null || type == "") {
-        return new Response("type is missing", {
-            status: 406,
-            statusText: "Not Acceptable"
-        });
-    } else if (name == null || name == "") {
-        return new Response("name is missing", {
-            status: 406,
-            statusText: "Not Acceptable"
+    const responseInit = {
+        headers: {
+            "Content-Type": "application/x-javascript; charset=UTF-8",
+            "Access-Control-Allow-Origin": "*"
+        }
+    };
+    
+    if ((type == null || type == "") || (name == null || name == "")) {
+        var request = event.request;
+        url.host = "cloudflare-dns.com";
+        const modifiedRequest = new Request(url, {
+            body: request.body,
+            headers: request.headers,
+            method: request.method
+        })
+        let response = await fetch(modifiedRequest);
+        return new Response(response.body,  {
+            headers: response.headers
         });
     }
 
@@ -116,12 +124,7 @@ const handleRequest = async event => {
         }
     }
 
-    const responseInit = {
-        headers: {
-            "Content-Type": "application/x-javascript; charset=UTF-8",
-            "Access-Control-Allow-Origin": "*"
-        }
-    };
+
     return new Response(JSON.stringify(response_json), responseInit);
 };
 
